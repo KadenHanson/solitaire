@@ -58,7 +58,9 @@ class App extends Component {
         });
     }
 
+    // Validates the move trying to be made.
     validMove(item) {
+        // This if statement checks if you are dropping the card in one of the 4 dropzones at the top where the stack of each suit lies
         if (item.upperDrop) {
             var upColumns = {
                 up_1: this.state.up_1,
@@ -69,13 +71,16 @@ class App extends Component {
             var upValue = item.value;
             var upSuit = item.suit;
             var upColumn = item.column;
+            // Sets up the card that is being landed on
             var upLandingCard = upColumns[upColumn][upColumns[upColumn].length - 1];
 
+            // Converts card value to numerical value for the sake of comparison
             if (upValue === 'jack') { upValue = 11 }
             if (upValue === 'queen') { upValue = 12 }
             if (upValue === 'king') { upValue = 13 }
             if (upValue === 'ace') { upValue = 1 }
 
+            // If there's no cards in the stack the card must be an ace
             if (upLandingCard === undefined) {
                 if (upValue !== 1) {
                     return false;
@@ -86,6 +91,7 @@ class App extends Component {
                 var upLandingCardValue = upLandingCard.value;
                 var upLandingCardSuit = upLandingCard.suit;
 
+                // Converts card value to numerical value for the sake of comparison
                 if (upLandingCardValue === 'jack') { upLandingCardValue = 11 }
                 if (upLandingCardValue === 'queen') { upLandingCardValue = 12 }
                 if (upLandingCardValue === 'king') { upLandingCardValue = 13 }
@@ -96,9 +102,11 @@ class App extends Component {
                 // eslint-disable-next-line
                 upLandingCardValue = parseInt(upLandingCardValue);
 
+                // If the suits don't match return false
                 if (upSuit !== upLandingCardSuit) {
                     return false;
                 }
+                // If the dragged card's value isn't 1 more than the landing card return false
                 if (upValue !== (upLandingCardValue + 1)) {
                     return false;
                 }
@@ -107,6 +115,7 @@ class App extends Component {
             }
         }
 
+        // Sets up local variables for the arrays for all the cards on the board
         var columns = [
             this.state.col_1,
             this.state.col_2,
@@ -119,12 +128,15 @@ class App extends Component {
         var suit = item.suit;
         var value = item.value;
         var column = columns[item.column - 1];
+        // Sets up the card that is being landed on
         var landingCard = column[column.length - 2];
 
+        // Checks to make sure that there's actually a landing card
         if (landingCard !== undefined) {
             var landingSuit = landingCard.suit;
             var landingValue = landingCard.value;
 
+            // Converts card value to numerical value for the sake of comparison
             if (landingValue === 'jack') { landingValue = 11 }
             if (landingValue === 'queen') { landingValue = 12 }
             if (landingValue === 'king') { landingValue = 13 }
@@ -134,6 +146,7 @@ class App extends Component {
             landingValue = parseInt(landingValue);
         }
 
+        // Converts card value to numerical value for the sake of comparison
         if (value === 'jack') { value = 11 }
         if (value === 'queen') { value = 12 }
         if (value === 'king') { value = 13 }
@@ -142,7 +155,9 @@ class App extends Component {
         // eslint-disable-next-line
         value = parseInt(value);
 
+        // Regular move onto any of the 7 columns
         if (landingCard !== undefined) {
+            // Switch statement that ensures that the landing card suit is of the opposite color
             switch (suit) {
                 case 'spades':
                     if (landingSuit === 'spades' || landingSuit === 'clubs') {
@@ -168,13 +183,16 @@ class App extends Component {
                     break;
             }
 
+            // Returns false if the landing value is less than or equal to the dragged card's value
             if (landingValue <= value) {
                 return false;
             }
+            // Returns false if the dragged card's value is not 1 less than the landing card
             if ((landingValue - 1) !== value) {
                 return false;
             }
         } else {
+            // If there's no landing card, then dragged card must be a king
             if (value < 13) {
                 return false;
             }
@@ -183,11 +201,13 @@ class App extends Component {
         return true;
     }
 
+    // Handles logic for moving the dragged card to it's new pile, as well as ensuring it's removed from it's original pile
     moveItem(item) {
         var suit = item.suit;
         var value = item.value;
         var column;
 
+        // Sets up local variables for the arrays for all the cards on the board
         var columns = [
             this.state.col_1,
             this.state.col_2,
@@ -197,15 +217,18 @@ class App extends Component {
             this.state.col_6,
             this.state.col_7
         ];
+        // Sets up local variables for the arrays for all the cards on the upper dropzones
         var upColumns = {
             up_1: this.state.up_1,
             up_2: this.state.up_2,
             up_3: this.state.up_3,
             up_4: this.state.up_4
         };
+        // Local variables for cards in the draw pile
         var upDrawCards = this.state.upDrawCards;
         var usedDrawCards = this.state.usedDrawCards;
 
+        // Boolean variables that are true if the dragged card is in that collumn
         var inCol_1 = this.checkIfExists(columns[0], suit, value);
         var inCol_2 = this.checkIfExists(columns[1], suit, value);
         var inCol_3 = this.checkIfExists(columns[2], suit, value);
@@ -214,30 +237,40 @@ class App extends Component {
         var inCol_6 = this.checkIfExists(columns[5], suit, value);
         var inCol_7 = this.checkIfExists(columns[6], suit, value);
 
+        // Boolean variables that are true if the dragged card is in that collumn of the upper dropzones
         var inUp_1 = this.checkIfExists(upColumns['up_1'], suit, value);
         var inUp_2 = this.checkIfExists(upColumns['up_2'], suit, value);
         var inUp_3 = this.checkIfExists(upColumns['up_3'], suit, value);
         var inUp_4 = this.checkIfExists(upColumns['up_4'], suit, value);
+
+        // Boolean variable that are true if the dragged card is in the draw pile
         var inUsedDrawCards = this.checkIfExists(usedDrawCards, suit, value);
 
+        // Checks that the move is valid
         if (item.column !== undefined && this.validMove(item)) {
             var index = item.index;
             column = item.column;
             var itemsToMove;
 
+            // Removes the dropzones from all the stacks
             columns.map((_column, _index) => {
                 return _column.map((item) => {
                     return item.column !== undefined ? _column.length = (_column.length - 1) : null;
                 });
             });
 
+            // Standard move from one of the 7 columns on the main board
             if (!item.upperDrop && !inUp_1 && !inUp_2 && !inUp_3 && !inUp_4 && !inUsedDrawCards) {
+                // Checks which column the dragged card came from
                 if (inCol_1) {
+                    // Removes the card(s) from the column
                     itemsToMove = columns[0].slice(index);
                     columns[0].length = index;
+                    // If there's a card under the dragged card flips it over to be used
                     if (columns[0][columns[0].length - 1] !== undefined) {
                         columns[0][columns[0].length - 1].showBack = false;
                     }
+                // Follows same pattern as above    
                 } else if (inCol_2) {
                     itemsToMove = columns[1].slice(index);
                     columns[1].length = index;
@@ -275,14 +308,18 @@ class App extends Component {
                         columns[6][columns[6].length - 1].showBack = false;
                     }
                 } else {
+                    // If dragged card came from the draw pile instead of a standard pile
                     itemsToMove = upDrawCards.slice(upDrawCards.length - 1);
                     upDrawCards.length = upDrawCards.length - 1;
                 }
 
+                // Puts the dragged card into the new column to be rendered
                 itemsToMove.map((_item) => {
                     return columns[column - 1].push(_item);
                 });
+            // If dragged card came from one of the upper dropzones
             } else if (inUp_1 || inUp_2 || inUp_3 || inUp_4) {
+                // Follows same logic pattern as above, just with a different set of columns
                 if (inUp_1) {
                     itemsToMove = upColumns['up_1'].slice(index);
                     upColumns['up_1'].length = index;
@@ -297,29 +334,38 @@ class App extends Component {
                     upColumns['up_4'].length = index;
                 }
 
+                // Puts the dragged card into the new column to be rendered 
                 itemsToMove.map((_item) => {
                     _item.upperCard = false;
                     return columns[column - 1].push(_item);
                 });
+            // If the card came from the pile of already overturned draw cards when depleting the 3 flipped cards
             } else if (inUsedDrawCards) {
+                // Again, follows same logic as above just with different columns
                 itemsToMove = usedDrawCards.slice(index);
                 usedDrawCards.length = index;
 
+                // If card is being dropped in upper dropzones
                 if (item.upperDrop) {
+                    // Puts the dragged card into the new column to be rendered
                     itemsToMove.map((_item) => {
                         _item.usedDrawCard = false;
                         _item.drawCard = false;
                         _item.upperCard = true;
                         return upColumns[column].push(_item);
                     });
+                // If card is going to 1 of the 7 standard columns
                 } else {
+                    // Puts the dragged card into the new column to be rendered
                     itemsToMove.map((_item) => {
                         _item.usedDrawCard = false;
                         _item.drawCard = false;
                         return columns[column - 1].push(_item);
                     });
                 }
+            // If the card is being dropped into one of the upper dropzones
             } else {
+                // Follows same logic pattern as above, just with different columns
                 if (inCol_1 && columns[0].slice(index).length === 1) {
                     itemsToMove = columns[0].slice(index);
                     columns[0].length = index;
@@ -363,19 +409,22 @@ class App extends Component {
                         columns[6][columns[6].length - 1].showBack = false;
                     }
                 } else {
+                    // If it came from the draw cards
                     if (upDrawCards.slice(upDrawCards.length - 1).length === 1) {
                         itemsToMove = upDrawCards.slice(upDrawCards.length - 1);
                         upDrawCards.length = upDrawCards.length - 1;
                     }
                 }
 
+                // Puts the dragged card into the new column to be rendered
                 itemsToMove.map((_item) => {
                     _item.upperCard = true;
                     return upColumns[column].push(_item);
                 });
             }
-
+        // If the move isn't valid
         } else {
+            // Checks if there's a dropzone in that column
             if (inCol_1) { column = 1 }
             if (inCol_2) { column = 2 }
             if (inCol_3) { column = 3 }
@@ -384,6 +433,7 @@ class App extends Component {
             if (inCol_6) { column = 6 }
             if (inCol_7) { column = 7 }
 
+            // Removes all dropzones
             columns.map((_column, _index) => {
                 return _column.map((item) => {
                     return item.column !== undefined ? _column.length = (_column.length - 1) : null;
@@ -408,7 +458,9 @@ class App extends Component {
         });
     }
 
+    // Renders drop zones when a card starts dragging
     showDropSpots(suit, value) {
+        // Set up local variables for the columns to be used here
         var col_1 = this.state.col_1;
         var col_2 = this.state.col_2;
         var col_3 = this.state.col_3;
@@ -417,6 +469,7 @@ class App extends Component {
         var col_6 = this.state.col_6;
         var col_7 = this.state.col_7;
 
+        // Checks which columns need a dropzone rendered
         var inCol_1 = this.checkIfExists(col_1, suit, value);
         var inCol_2 = this.checkIfExists(col_2, suit, value);
         var inCol_3 = this.checkIfExists(col_3, suit, value);
@@ -425,6 +478,7 @@ class App extends Component {
         var inCol_6 = this.checkIfExists(col_6, suit, value);
         var inCol_7 = this.checkIfExists(col_7, suit, value);
 
+        // Adds the dropzone to all columns that need it
         if (!inCol_1 && (col_1.length !== 0 ? !col_1[(col_1.length - 1)].showBack : true)) { col_1.push({ column: 1 }) }
         if (!inCol_2 && (col_2.length !== 0 ? !col_2[(col_2.length - 1)].showBack : true)) { col_2.push({ column: 2 }) }
         if (!inCol_3 && (col_3.length !== 0 ? !col_3[(col_3.length - 1)].showBack : true)) { col_3.push({ column: 3 }) }
@@ -445,10 +499,12 @@ class App extends Component {
         });
     }
 
+    // The function that takes in an columns array, and the cards suit and value and checks if it exists within that array/column
     checkIfExists(array, suit, value) {
         var result = false;
 
         array.map((card) => {
+            // If the card is in this arary return true
             if (card.suit === suit && card.value === value) {
                 return result = true;
             }
@@ -459,12 +515,15 @@ class App extends Component {
         return result;
     }
 
+    // Maps cards and dropzones to be rendered in standard piles
     mapCards(cards) {
         var upCardIndex = 1;
         var extraTop = 0;
 
         var mappedCards = cards.map((card, index) => {
+            // If it's a card
             if (card.column === undefined) {
+                // Logic to determine where the card is placed in the stack. ex.(If the card below it has it's back showing only be 15px below it, if not be more)
                 if (index !== 0) {
                     if (cards[(index - 1)].showBack) {
                         extraTop = 0
@@ -480,6 +539,7 @@ class App extends Component {
                 }
 
                 return (
+                    // Renders card and sets it's props
                     <CardContainer
                         key={`${card.value}_${card.suit}`}
                         Suit={card.suit}
@@ -495,10 +555,12 @@ class App extends Component {
                         UpperCard={card.upperCard}
                     />
                 );
+            // If it's a dropzone
             } else {
                 var upCards = cards.filter(card => card.showBack === false);
 
                 return (
+                    // Renders dropzone and sets it's props
                     <DropSpot
                         key={cards.length}
                         Index={cards.length}
@@ -514,6 +576,7 @@ class App extends Component {
         return mappedCards;
     }
 
+    // Maps the cards in the draw pile as the have slightly different props
     mapDrawCards(cards) {
         var mappedCards = cards.map((card, index) => {
             return (
@@ -538,12 +601,14 @@ class App extends Component {
         return mappedCards;
     }
 
+    // Flips draw cards and puts them in the area to be drawn from
     moveDrawCards() {
         var drawCards = this.state.drawCards;
         var upDrawCards = this.state.upDrawCards;
         var usedDrawCards = this.state.usedDrawCards;
         var overturnCards;
 
+        // Logic to ensure it doesn't try to flip too many cards if there's not enough to flip 3
         if (drawCards.length < 3) {
             if (drawCards.length === 2) {
                 overturnCards = drawCards.slice(drawCards.length - 2).reverse();
@@ -558,11 +623,13 @@ class App extends Component {
             drawCards.length = drawCards.length - 3;
         }
 
+        // Puts cards in the overturned pile below the 3 newly turned over cards
         upDrawCards.map((card) => {
             card.usedDrawCard = true;
             return usedDrawCards.push(card);
         });
 
+        // Changes cards properties to be rendered correctly in overturned draw cards pile
         var result = overturnCards.map((card) => {
             card.showBack = false;
             return card;
@@ -575,31 +642,37 @@ class App extends Component {
         });
     }
 
+    // Resets the draw pile and ensures that it's in the correct order
     resetDrawCards() {
         var drawCards = [];
         var upDrawCards = this.state.upDrawCards;
         var usedDrawCards = this.state.usedDrawCards;
 
+        // Puts the unused overturn pile cards back into draw pile
         usedDrawCards.map((card) => {
             card.showBack = true;
             card.usedDrawCard = false;
             return drawCards.push(card);
         });
+        // Puts the most recently flipped over cards back into the draw pile
         upDrawCards.map((card) => {
             card.showBack = true;
             return drawCards.push(card);
         });
 
         this.setState({
+            // Reverses the drawcards array so that it ends up in the correct order
             drawCards: drawCards.reverse(),
             upDrawCards: [],
             usedDrawCards: []
         });
     }
 
+    // Initial splitting up of cards into each column and the draw pile, takes in the column and the deck
     splitCards(column, deck) {
         var upCard;
 
+        // Checks which column was passed in and splits cards accordingly
         switch (column) {
             case 1:
                 upCard = deck[0];
@@ -634,20 +707,24 @@ class App extends Component {
         }
     }
 
+    // Creates the deck of cards
     generateCards() {
         var cards = [];
         var suits = ['spades', 'clubs', 'diamonds', 'hearts'];
         var values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace'];
 
+        // Maps out the objects for each card
         suits.map((_suit) => {
             return values.map((_value) => {
                 return cards.push({ suit: _suit, value: _value, showBack: true });
             });
         });
 
+        // Returns the newly created and shuffled deck
         return this.shuffleCards(cards);
     }
 
+    // Takes in a deck and shuffles it then returns it
     shuffleCards(cards) {
         var currentIndex = cards.length, temporaryValue, randomIndex;
 

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Card } from '../components/Card';
 import { DragSource } from 'react-dnd';
 
+// Object that determines the src of the image for the card based on props
 const images = {
     spades: {
         2: require('../images/card_images/2_of_spades.png'),
@@ -65,10 +66,12 @@ const images = {
     }
 }
 
+// Drag source item type
 const Types = {
     ITEM: 'CardContainer'
 }
 
+// Sets up methods used by react-dnd to pass data based on drag action
 const itemSource = {
     beginDrag(props) {
         return {
@@ -134,10 +137,12 @@ class CardContainer extends Component {
         this.setState({ image: this.getImageName(this.state.suit, this.state.value, this.state.showBack) });
     }
 
+    // Uses images object above to set the src of the card image
     getImageName(suit, value, showBack) {
         return showBack ? require('../images/card_images/back@2x.png') : images[suit][value];
     }
 
+    // Flips 3 cards over if the card is the top card in the draw pile
     handleTopCardClick() {
         return this.state.topDrawCard ? this.props.MoveDrawCards() : null;
     }
