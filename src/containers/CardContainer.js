@@ -102,6 +102,7 @@ class CardContainer extends Component {
         super(props);
         this.getImageName = this.getImageName.bind(this);
         this.handleTopCardClick = this.handleTopCardClick.bind(this);
+        this.handleDoubleClick = this.handleDoubleClick.bind(this);
 
         this.state = {
             suit: props.Suit,
@@ -147,6 +148,10 @@ class CardContainer extends Component {
         return this.state.topDrawCard ? this.props.MoveDrawCards() : null;
     }
 
+    handleDoubleClick() {
+        return !this.state.showBack ? this.props.FindSpot(this.state.suit, this.state.value, this.state.Index, this.state.drawCard) : null;
+    }
+
     render() {
         const { connectDragSource, isDragging } = this.props;
         
@@ -162,6 +167,7 @@ class CardContainer extends Component {
                     left: this.state.drawCard && !this.state.usedDrawCard ? (this.state.showBack ? this.state.Index * 2 : this.state.Index * 25) : 0
                 }}
                 onClick={this.handleTopCardClick}
+                onDoubleClick={this.handleDoubleClick}
             >
                 <Card Image={this.state.image} Suit={this.state.suit} Value={this.state.value} />
                 {isDragging ? this.props.ShowDropSpots(this.state.suit, this.state.value) : null}

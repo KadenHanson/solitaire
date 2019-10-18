@@ -20,6 +20,11 @@ class App extends Component {
         this.mapDrawCards = this.mapDrawCards.bind(this);
         this.moveDrawCards = this.moveDrawCards.bind(this);
         this.resetDrawCards = this.resetDrawCards.bind(this);
+        this.startTimer = this.startTimer.bind(this);
+        this.stopTimer = this.stopTimer.bind(this);
+        this.formatTime = this.formatTime.bind(this);
+        this.findSpot = this.findSpot.bind(this);
+        this.resetGame = this.resetGame.bind(this);
 
         this.state = {
             deck: [],
@@ -37,7 +42,8 @@ class App extends Component {
             up_4: [],
             upDrawCards: [],
             usedDrawCards: [],
-            showUpperDrops: false
+            showUpperDrops: false,
+            time: 0
         };
     }
 
@@ -56,12 +62,102 @@ class App extends Component {
             drawCards: this.splitCards(0, _deck),
             upDrawCards: []
         });
+
+        this.startTimer();
+    }
+
+    resetGame() {
+        this.stopTimer();
+        var _deck = this.generateCards();
+
+        this.setState({
+            deck: _deck,
+            col_1: this.splitCards(1, _deck),
+            col_2: this.splitCards(2, _deck),
+            col_3: this.splitCards(3, _deck),
+            col_4: this.splitCards(4, _deck),
+            col_5: this.splitCards(5, _deck),
+            col_6: this.splitCards(6, _deck),
+            col_7: this.splitCards(7, _deck),
+            up_1: [],
+            up_2: [],
+            up_3: [],
+            up_4: [],
+            drawCards: this.splitCards(0, _deck),
+            upDrawCards: [],
+            usedDrawCards: [],
+            showUpperDrops: false,
+            time: 0
+        });
+
+        this.startTimer();
+    }
+
+    // Starts timer for the game
+    startTimer() {
+        this.timer = setInterval(() => this.setState({
+            time: this.state.time + 1
+        }), 1000);
+    }
+
+    // Stops timer for the game
+    stopTimer() {
+        clearInterval(this.timer);
     }
 
     // Validates the move trying to be made.
     validMove(item) {
+        if (item.drawCard && item.findSpotCheck) {
+            if (this.checkIfExists(this.state.upDrawCards, item.suit, item.value)) {
+                if (this.state.upDrawCards.length !== (item.index + 1)) {
+                    return false;
+                }
+            }
+        }
+
         // This if statement checks if you are dropping the card in one of the 4 dropzones at the top where the stack of each suit lies
         if (item.upperDrop) {
+            // Boolean variables that are true if the dragged card is in that collumn
+            var inCol_1 = this.checkIfExists(this.state.col_1, item.suit, item.value);
+            var inCol_2 = this.checkIfExists(this.state.col_2, item.suit, item.value);
+            var inCol_3 = this.checkIfExists(this.state.col_3, item.suit, item.value);
+            var inCol_4 = this.checkIfExists(this.state.col_4, item.suit, item.value);
+            var inCol_5 = this.checkIfExists(this.state.col_5, item.suit, item.value);
+            var inCol_6 = this.checkIfExists(this.state.col_6, item.suit, item.value);
+            var inCol_7 = this.checkIfExists(this.state.col_7, item.suit, item.value);
+
+            if (item.findSpotCheck) {
+                if (inCol_1) {
+                    if (this.state.col_1.length !== (item.index + 1)) {
+                        return false;
+                    }
+                } else if (inCol_2) {
+                    if (this.state.col_2.length !== (item.index + 1)) {
+                        return false;
+                    }
+                } else if (inCol_3) {
+                    if (this.state.col_3.length !== (item.index + 1)) {
+                        return false;
+                    }
+                } else if (inCol_4) {
+                    if (this.state.col_4.length !== (item.index + 1)) {
+                        return false;
+                    }
+                } else if (inCol_5) {
+                    if (this.state.col_5.length !== (item.index + 1)) {
+                        return false;
+                    }
+                } else if (inCol_6) {
+                    if (this.state.col_6.length !== (item.index + 1)) {
+                        return false;
+                    }
+                } else if (inCol_7) {
+                    if (this.state.col_7.length !== (item.index + 1)) {
+                        return false;
+                    }
+                }
+            }
+
             var upColumns = {
                 up_1: this.state.up_1,
                 up_2: this.state.up_2,
@@ -129,7 +225,12 @@ class App extends Component {
         var value = item.value;
         var column = columns[item.column - 1];
         // Sets up the card that is being landed on
-        var landingCard = column[column.length - 2];
+        var landingCard;
+        if (!item.findSpotCheck || item.findSpotCheck === undefined) {
+            landingCard = column[column.length - 2];
+        } else {
+            landingCard = column[column.length - 1];
+        }
 
         // Checks to make sure that there's actually a landing card
         if (landingCard !== undefined) {
@@ -270,7 +371,7 @@ class App extends Component {
                     if (columns[0][columns[0].length - 1] !== undefined) {
                         columns[0][columns[0].length - 1].showBack = false;
                     }
-                // Follows same pattern as above    
+                    // Follows same pattern as above    
                 } else if (inCol_2) {
                     itemsToMove = columns[1].slice(index);
                     columns[1].length = index;
@@ -317,7 +418,7 @@ class App extends Component {
                 itemsToMove.map((_item) => {
                     return columns[column - 1].push(_item);
                 });
-            // If dragged card came from one of the upper dropzones
+                // If dragged card came from one of the upper dropzones
             } else if (inUp_1 || inUp_2 || inUp_3 || inUp_4) {
                 // Follows same logic pattern as above, just with a different set of columns
                 if (inUp_1) {
@@ -335,11 +436,18 @@ class App extends Component {
                 }
 
                 // Puts the dragged card into the new column to be rendered 
-                itemsToMove.map((_item) => {
-                    _item.upperCard = false;
-                    return columns[column - 1].push(_item);
-                });
-            // If the card came from the pile of already overturned draw cards when depleting the 3 flipped cards
+                if (item.upperDrop) {
+                    itemsToMove.map((_item) => {
+                        _item.upperCard = false;
+                        return upColumns[column].push(_item);
+                    });
+                } else {
+                    itemsToMove.map((_item) => {
+                        _item.upperCard = false;
+                        return columns[column - 1].push(_item);
+                    });
+                }
+                // If the card came from the pile of already overturned draw cards when depleting the 3 flipped cards
             } else if (inUsedDrawCards) {
                 // Again, follows same logic as above just with different columns
                 itemsToMove = usedDrawCards.slice(index);
@@ -354,7 +462,7 @@ class App extends Component {
                         _item.upperCard = true;
                         return upColumns[column].push(_item);
                     });
-                // If card is going to 1 of the 7 standard columns
+                    // If card is going to 1 of the 7 standard columns
                 } else {
                     // Puts the dragged card into the new column to be rendered
                     itemsToMove.map((_item) => {
@@ -363,7 +471,7 @@ class App extends Component {
                         return columns[column - 1].push(_item);
                     });
                 }
-            // If the card is being dropped into one of the upper dropzones
+                // If the card is being dropped into one of the upper dropzones
             } else {
                 // Follows same logic pattern as above, just with different columns
                 if (inCol_1 && columns[0].slice(index).length === 1) {
@@ -422,7 +530,7 @@ class App extends Component {
                     return upColumns[column].push(_item);
                 });
             }
-        // If the move isn't valid
+            // If the move isn't valid
         } else {
             // Checks if there's a dropzone in that column
             if (inCol_1) { column = 1 }
@@ -456,6 +564,11 @@ class App extends Component {
             usedDrawCards: usedDrawCards,
             showUpperDrops: false
         });
+
+        if (this.state.up_1.length === 13 && this.state.up_2.length === 13 && this.state.up_3.length === 13 && this.state.up_4.length === 13) {
+            alert('You Win!');
+            this.stopTimer();
+        }
     }
 
     // Renders drop zones when a card starts dragging
@@ -553,9 +666,11 @@ class App extends Component {
                         MoveItem={this.moveItem}
                         DrawCard={false}
                         UpperCard={card.upperCard}
+                        FindSpot={this.findSpot}
+                        ArrayLength={cards.length}
                     />
                 );
-            // If it's a dropzone
+                // If it's a dropzone
             } else {
                 var upCards = cards.filter(card => card.showBack === false);
 
@@ -576,7 +691,7 @@ class App extends Component {
         return mappedCards;
     }
 
-    // Maps the cards in the draw pile as the have slightly different props
+    // Maps the cards in the draw pile as they have slightly different props
     mapDrawCards(cards) {
         var mappedCards = cards.map((card, index) => {
             return (
@@ -591,9 +706,11 @@ class App extends Component {
                     ShowDropSpots={this.showDropSpots}
                     MoveItem={this.moveItem}
                     DrawCard={true}
-                    TopDrawCard={index === (cards.length - 1) ? true : false}
+                    TopDrawCard={index === (cards.length - 1) ? (!card.showBack ? false : true) : false}
                     MoveDrawCards={this.moveDrawCards}
                     UsedDrawCard={card.usedDrawCard}
+                    FindSpot={this.findSpot}
+                    ArrayLength={cards.length}
                 />
             );
         });
@@ -744,9 +861,69 @@ class App extends Component {
         return cards;
     }
 
+    // Formats the timer into hh:mm:ss format
+    formatTime(time) {
+        var sec_num = parseInt(time, 10);
+        var hours = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+        if (hours < 10) { hours = "0" + hours; }
+        if (seconds < 10) { seconds = "0" + seconds; }
+        return (hours < 1 ? '' : hours + ':') + (minutes < 1 ? '0:' : minutes + ':') + seconds;
+    }
+
+    // Handles finding a location for the card to automatically go to on double click
+    findSpot(suit, value, _index, drawCard) {
+        var hasMoved = false;
+        // Sets up local variables for the arrays for all the cards on the board
+        var columns = [
+            this.state.col_1,
+            this.state.col_2,
+            this.state.col_3,
+            this.state.col_4,
+            this.state.col_5,
+            this.state.col_6,
+            this.state.col_7
+        ];
+        // Sets up local variables for the arrays for all the cards on the upper dropzones
+        var upColumns = [
+            'up_1',
+            'up_2',
+            'up_3',
+            'up_4'
+        ];
+        upColumns.map((item, index) => {
+            if (this.validMove({ suit: suit, value: value, column: upColumns[index], findSpotCheck: true, upperDrop: true, drawCard: drawCard, index: _index }) && !hasMoved) {
+                this.showDropSpots({ suit: suit, value: value, index: _index, upperDrop: true });
+                hasMoved = true;
+                this.moveItem({ suit: suit, value: value, column: upColumns[index], index: _index, upperDrop: true });
+                return false;
+            }
+            return true;
+        });
+        if (!hasMoved) {
+            columns.map((item, index) => {
+                if (this.validMove({ suit: suit, value: value, column: index + 1, findSpotCheck: true, drawCard: drawCard, index: _index }) && !hasMoved) {
+                    this.showDropSpots({ suit: suit, value: value, index: _index });
+                    hasMoved = true;
+                    this.moveItem({ suit: suit, value: value, column: index + 1, index: _index });
+                    return false;
+                }
+                return true;
+            });
+        }
+    }
+
     render() {
         return (
             <div className="App">
+                <div className="newGame">
+                    <button onClick={this.resetGame}>New Game</button>
+                </div>
+                <div className="timer">
+                    Time: {this.formatTime(this.state.time)}
+                </div>
                 <div style={{ position: 'relative', top: 10 }}>
                     {this.mapDrawCards(this.state.drawCards)}
                     {
@@ -778,28 +955,28 @@ class App extends Component {
                         <tbody>
                             <tr>
                                 <td style={{ position: 'relative', width: 175 }}>
-                                    {this.state.up_1.length === 0 ? ( <CardOutline /> ) : null}
+                                    {this.state.up_1.length === 0 ? (<CardOutline />) : null}
                                     {this.mapCards(this.state.up_1)}
                                     <div style={{ display: this.state.showUpperDrops ? 'block' : 'none' }}>
                                         <DropSpot Position={'relative'} UpperDrop={true} Column={'up_1'} Index={1000} />
                                     </div>
                                 </td>
                                 <td style={{ position: 'relative', width: 175 }}>
-                                    {this.state.up_2.length === 0 ? ( <CardOutline /> ) : null}
+                                    {this.state.up_2.length === 0 ? (<CardOutline />) : null}
                                     {this.mapCards(this.state.up_2)}
                                     <div style={{ display: this.state.showUpperDrops ? 'block' : 'none' }}>
                                         <DropSpot Position={'relative'} UpperDrop={true} Column={'up_2'} Index={1000} />
                                     </div>
                                 </td>
                                 <td style={{ position: 'relative', width: 175 }}>
-                                    {this.state.up_3.length === 0 ? ( <CardOutline /> ) : null}
+                                    {this.state.up_3.length === 0 ? (<CardOutline />) : null}
                                     {this.mapCards(this.state.up_3)}
                                     <div style={{ display: this.state.showUpperDrops ? 'block' : 'none' }}>
                                         <DropSpot Position={'relative'} UpperDrop={true} Column={'up_3'} Index={1000} />
                                     </div>
                                 </td>
                                 <td style={{ position: 'relative', width: 175 }}>
-                                    {this.state.up_4.length === 0 ? ( <CardOutline /> ) : null}
+                                    {this.state.up_4.length === 0 ? (<CardOutline />) : null}
                                     {this.mapCards(this.state.up_4)}
                                     <div style={{ display: this.state.showUpperDrops ? 'block' : 'none' }}>
                                         <DropSpot Position={'relative'} UpperDrop={true} Column={'up_4'} Index={1000} />
@@ -813,31 +990,31 @@ class App extends Component {
                     <tbody>
                         <tr>
                             <td style={{ position: 'relative' }}>
-                                {this.state.col_1.length === 0 ? ( <CardOutline /> ) : null}
+                                {this.state.col_1.length === 0 ? (<CardOutline />) : null}
                                 {this.mapCards(this.state.col_1)}
                             </td>
                             <td style={{ position: 'relative' }}>
-                                {this.state.col_2.length === 0 ? ( <CardOutline /> ) : null}
+                                {this.state.col_2.length === 0 ? (<CardOutline />) : null}
                                 {this.mapCards(this.state.col_2)}
                             </td>
                             <td style={{ position: 'relative' }}>
-                                {this.state.col_3.length === 0 ? ( <CardOutline /> ) : null}
+                                {this.state.col_3.length === 0 ? (<CardOutline />) : null}
                                 {this.mapCards(this.state.col_3)}
                             </td>
                             <td style={{ position: 'relative' }}>
-                                {this.state.col_4.length === 0 ? ( <CardOutline /> ) : null}
+                                {this.state.col_4.length === 0 ? (<CardOutline />) : null}
                                 {this.mapCards(this.state.col_4)}
                             </td>
                             <td style={{ position: 'relative' }}>
-                                {this.state.col_5.length === 0 ? ( <CardOutline /> ) : null}
+                                {this.state.col_5.length === 0 ? (<CardOutline />) : null}
                                 {this.mapCards(this.state.col_5)}
                             </td>
                             <td style={{ position: 'relative' }}>
-                                {this.state.col_6.length === 0 ? ( <CardOutline /> ) : null}
+                                {this.state.col_6.length === 0 ? (<CardOutline />) : null}
                                 {this.mapCards(this.state.col_6)}
                             </td>
                             <td style={{ position: 'relative' }}>
-                                {this.state.col_7.length === 0 ? ( <CardOutline /> ) : null}
+                                {this.state.col_7.length === 0 ? (<CardOutline />) : null}
                                 {this.mapCards(this.state.col_7)}
                             </td>
                         </tr>
