@@ -15,13 +15,17 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "devDependencies": {
-    "babel-plugin-transform-decorators-legacy": "^1.3.5"
+    "babel-plugin-transform-decorators-legacy": "^1.3.5",
+    "gh-pages": "^2.1.1"
   },
   "plugins": [
     "transform-decorators-legacy",
     "transform-class-properties"
-  ]
+  ],
+  "homepage": "http://kadenhanson.github.io/solitaire"
 }
