@@ -25,6 +25,7 @@ class App extends Component {
         this.formatTime = this.formatTime.bind(this);
         this.findSpot = this.findSpot.bind(this);
         this.resetGame = this.resetGame.bind(this);
+        this.finishWinningGame = this.finishWinningGame.bind(this);
 
         this.state = {
             deck: [],
@@ -43,7 +44,8 @@ class App extends Component {
             upDrawCards: [],
             usedDrawCards: [],
             showUpperDrops: false,
-            time: 0
+            time: 0,
+            timeStarted: false
         };
     }
 
@@ -63,7 +65,7 @@ class App extends Component {
             upDrawCards: []
         });
 
-        this.startTimer();
+        document.body.addEventListener('click', this.startTimer);
     }
 
     resetGame() {
@@ -87,17 +89,19 @@ class App extends Component {
             upDrawCards: [],
             usedDrawCards: [],
             showUpperDrops: false,
-            time: 0
+            time: 0,
+            timeStarted: false
         });
-
-        this.startTimer();
     }
 
     // Starts timer for the game
     startTimer() {
-        this.timer = setInterval(() => this.setState({
-            time: this.state.time + 1
-        }), 1000);
+        if (!this.state.timeStarted) {
+            this.timer = setInterval(() => this.setState({
+                time: this.state.time + 1
+            }), 1000);
+            this.setState({ timeStarted: true });
+        }
     }
 
     // Stops timer for the game
@@ -566,9 +570,13 @@ class App extends Component {
         });
 
         if (this.state.up_1.length === 13 && this.state.up_2.length === 13 && this.state.up_3.length === 13 && this.state.up_4.length === 13) {
-            alert('You Win!');
-            this.stopTimer();
+            this.finishWinningGame();
         }
+    }
+
+    finishWinningGame() {
+        alert('You Win!');
+        this.stopTimer();
     }
 
     // Renders drop zones when a card starts dragging
@@ -668,6 +676,7 @@ class App extends Component {
                         UpperCard={card.upperCard}
                         FindSpot={this.findSpot}
                         ArrayLength={cards.length}
+                        StartTimer={this.startTimer}
                     />
                 );
                 // If it's a dropzone
@@ -711,6 +720,7 @@ class App extends Component {
                     UsedDrawCard={card.usedDrawCard}
                     FindSpot={this.findSpot}
                     ArrayLength={cards.length}
+                    StartTimer={this.startTimer}
                 />
             );
         });

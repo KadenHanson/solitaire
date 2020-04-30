@@ -1,7 +1,12 @@
+html {
+    height: 100%;
+}
+
 body {
     background-image: url('./images/background_1.jpg');
     overflow: hidden;
     user-select: none !important;
+    height: 100%;
 }
 
 .App {

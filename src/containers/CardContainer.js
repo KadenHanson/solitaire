@@ -85,6 +85,7 @@ const itemSource = {
     },
     endDrag(props, monitor) {
         var result = monitor.getDropResult();
+        props.StartTimer();
 
         return result === null ? props.MoveItem({ suit: props.Suit, value: props.value }) : props.MoveItem(result);
     }
