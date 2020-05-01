@@ -26,6 +26,7 @@ class App extends Component {
         this.findSpot = this.findSpot.bind(this);
         this.resetGame = this.resetGame.bind(this);
         this.finishWinningGame = this.finishWinningGame.bind(this);
+        this.setBestScore = this.setBestScore.bind(this);
 
         this.state = {
             deck: [],
@@ -577,6 +578,17 @@ class App extends Component {
     finishWinningGame() {
         alert('You Win!');
         this.stopTimer();
+        this.setBestScore();
+    }
+
+    setBestScore() {
+        if (localStorage.getItem('best-time') == null) {
+            localStorage.setItem('best-time', this.state.time);
+        } else {
+            if (parseInt(localStorage.getItem('best-time'), 10) > this.state.time) {
+                localStorage.setItem('best-time', this.state.time);
+            }
+        }
     }
 
     // Renders drop zones when a card starts dragging
@@ -931,8 +943,16 @@ class App extends Component {
                 <div className="newGame">
                     <button onClick={this.resetGame}>New Game</button>
                 </div>
-                <div className="timer">
+                <div id="currentTime" className="timer">
                     Time: {this.formatTime(this.state.time)}
+                </div>
+                <div id="bestTime" className="timer">
+                    Best Time:
+                    {
+                        localStorage.getItem('best-time') != null ? (
+                            this.formatTime(localStorage.getItem('best-time'))
+                        ) : null
+                    }
                 </div>
                 <div style={{ position: 'relative', top: 10 }}>
                     {this.mapDrawCards(this.state.drawCards)}
